@@ -289,30 +289,35 @@ oceania_perc <- ggplot(oceania_lineages, aes(y = reorder(lineage, percentage), x
   labs(title = "SARS-CoV2 Lineages (percent) in Oceania", y = "Lineage", x = "Percentage", caption = "Source: github") 
 ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Lineagess_in_oceania_percent_bar.pdf")
 
+##### COMPARING THE CONTINENTAL DATA WITH POPULATION
+#group data on continental basis
+continent_cases <- lineages %>% select(continent) %>% group_by(continent) %>% summarise(N = n())
+
+#add population of each continent gotten from worldometer
+continent_cases$popn <- c(1340598147, 4641054775, 747636026, 592072212, 42677813, 430759766)
+continent_cases <- continent_cases %>% mutate (Population = popn/1000000000)
+#calculate and include cases per 100 persons
+continent_cases <- continent_cases %>% mutate(infect_per_10million = (N/popn)*10000000)
+continent_cases <- as.data.frame(continent_cases)
+#Add global average to know continents above global average
+Global_Average_cases_per_10million <- (sum(continent_cases$N)/sum(continent_cases$popn))*10000000
 
 
+##Number of persons infected per 10 million person
+#Bar chart
+continent_infect_per_10million_bar <- ggplot(continent_cases, aes(x = reorder(continent, infect_per_10million), y = infect_per_10million)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  geom_hline(yintercept = Global_Average_cases_per_10million, col = "Red", lwd = 1) +
+  labs(title = "SARS-CoV2 cases per ten million persons across continents", y = "Number of cases", x = "Continent", caption = "Source: github and worldometer") 
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Cases_per_10million_across_continents_bar.pdf")
 
+#Point chart
+continent_infect_per_10million_point <- ggplot(continent_cases, aes(y = Population, x = infect_per_10million)) + 
+  geom_point(size = 2, color = "orange") + 
+  geom_text(label = continent_cases$continent) + theme_bw() +
+  labs(title = "SARS-CoV2 cases per 10 milion persons across the continents",  y = "Population (x billion)", x ="Number of SARS-CoV2 Cases", caption = "Source: https://www.worldometers.info/coronavirus")
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Cases_per_10million_across_continents_point.pdf")
 
-#Pie chart of lineage distribution across continents
-#ggplot(continent_data, aes(y = N, x = "", fill = lineage)) +
-# geom_bar(width = 1, stat = "identity", color = "white") +
-#coord_polar("y", start = 0) +
-#geom_text(aes(label = N), color = "white") +
-#theme_void() +
-#facet_wrap(~ continent)
-
-ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Lineages_across_continents_percent_bar.pdf")
-
-
-
-
-
-#ggplot(africa_lineages, aes(x = "", y = N, fill = lineage)) +
-# geom_bar(stat = "identity", width = 1) +
-#coord_polar("y", start = 0) +
-#geom_text(aes(label = paste0(round(percentage, "%"),2), position = position_stack(vjust = 0.5))) +
-#labs(x = NULL, y = NULL, fill = NULL, title = "SARS-CoV2 Lineages in Africa") +
-#theme_classic()
 
 
 ######################################################################
@@ -366,155 +371,3 @@ ggplot(Complete_T_Tests, aes(y = reorder(region, Percentage_Test_Positive), x = 
 ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_Percent_Positive_bar.pdf")
 
 
-################################## FOR SCATTER PIE ######################
-
-##This is to drew the size varied pie charts for lineages in Ghana
-#Lineages_in_Ghana <- c("A", "B", "B.1", "B.1.1", "B.1.3", "B.1.5", "B.2", "B.2.1")
-#Ghana_Map.data <- map_data("world", region = "ghana")
-#Ghanian_Map <- ggplot(Ghana_Map.data, aes(x = long, y = lat)) +
-# geom_map(map = Ghana_Map.data, aes (map_id = region), fill = NA, color= "black") +
-#geom_scatterpie(data = Ghana_RegionsDF, 
-#               aes(Long, Lat, group = region, r = sqrt(size/35)),
-#              cols = Lineages_in_Ghana,
-#             alpha = 0.5) +
-#labs(title = "Distribution of SARS-CoV2 lineages across the Regions in Ghana", caption = "Source: GISAID, 2020", fill = NULL) +
-#theme_bw() 
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/PLOTS/Ghana_Regions_Lineages2.jpeg")
-
-
-##Attempt to draw variable pie chart for Nigeria lineage diversity
-#Ngr_lineages <- c("A", "A.1", "B.1", "B.1.1", "B.1.1.1", "B.1.2", "B.1.22", "B.1.36", "B.1.5", "B.2.1")
-#Nigeria_Map.data <- map_data("world", region = "nigeria")
-#Nigerian_Map <- ggplot(Nigeria_Map.data, aes(x = long, y = lat)) +
-# geom_map(map = Nigeria_Map.data, aes (map_id = region), fill = NA, color= "black") +
-#geom_scatterpie(data = Nigeria_StatesDF, 
-#               aes(long, lat, group = Area, r = sqrt(Total/55)),
-#              cols = Ngr_lineages,
-#             alpha = 0.5) +
-#labs(title = "Distribution of SARS-CoV2 lineages across the states in Nigeria", caption = "Source: GISAID, 2020", fill = NULL) +
-#theme_bw()
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/Updated_Nigeria_Plots/Nigeria_States_Lineages2.pdf")
-
-
-
-
-
-
-
-
-########################## END OF SCATTER PIE ############################
-
-
-
-
-
-
-######################################################################################################
-#SARSCoV2 reported cases in various African countries
-#ggplot(Africa_Map_details) + 
-# geom_polygon(aes(long, lat, group = group, fill = SARSCoV2_Cases), color = 'black') +
-#coord_map("bonne", parameters = 45) +
-#labs(title = "SARS-CoV2 cases in Africa", caption = "Source: https://www.worldometers.info/coronavirus") +
-#scale_fill_continuous(name = "Cases", low = "white", high = "red", 
-#                       limits = c(0, 800000), breaks = c(0, 45000, 100000, 300000, 600000)) +
-#theme_void() 
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_SARSCoV2_Cases_Map.pdf")   
-#scale_fill_brewer(palette = "Reds")
-
-#Number of infected persons per million in African countries
-#ggplot(Africa_Map_details) + 
-# geom_polygon(aes(long, lat, group = group, fill = Cases_Per_Million), color = 'black') +
-#coord_map("bonne", parameters = 45)+
-#labs(title = "SARS-CoV2 per million of population in African countries", caption = "Source: https://www.worldometers.info/coronavirus") +
-#scale_fill_continuous(name = "Cases_Per_Million", low = "white", high = "darkblue",
-#                     limits = c(0, 13000), breaks = c(0, 1500, 2500, 5000, 7500, 10000, 15000)) +
-#theme_void()
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Cases_Per_Million_Map.pdf")
-
-
-####Charts for Africa
-#SARSCoV2 Infection per million in African Countries
-#ggplot(Africa_Map_details, aes(y = Popn, x = Cases_Per_Million)) + 
-# geom_point(size = 2, color = 'red') + 
-#geom_text(label = Africa_Map_details$region) + theme_bw() +
-#labs(title = "SARS-CoV2 cases per one million population in African countries", subtitle = "Plot of Population against number of persons infected per one million population in Africa", y = "Population", x ="Persons infected per million", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_Million_point.pdf")
-
-
-#SARSCoV2 Infection per 100,000 in African Countries
-#ggplot(Africa_Map_details, aes(y = Popn, x = Per_100000_Infected)) + 
-# geom_point(size = 2, color = 'blue') + 
-#geom_text(label = Africa_Map_details$region) + theme_bw() +
-#labs(title = " SARS-CoV2 per hundred thousand population in African Countries", subtitle = "Plot of population against number of reported SARS-CoV-2 cases per hundred thousand population", y = "Population", x ="Persons infected per hundred thousand", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_100000_point.pdf")
-
-
-#Bar chart of SARSCoV2 cases in African countries
-#ggplot(Africa_Centriods, aes(y = reorder(region, SARSCoV2_Cases), x = SARSCoV2_Cases)) +
-# geom_bar(stat = "identity", fill = 'steelblue') +
-#labs(title = "Reported cases of SARS-CoV-2 in African Countries", y = "Country", x = "Number of cases", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Cases_bar.pdf")
-
-
-
-#ggplot(Africa_SARS_df, aes(y = reorder(region, SARSCoV2_Cases), x =SARSCoV2_Cases)) +
-# geom_bar(stat = "identity", fill = "steelblue") +
-#labs(title = "Reported SARSCoV2 cases in African Countries", y = "Country", x = "Number of cases", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_SARSCoV2_Cases_bar.pdf")
-
-
-
-#Bar chart of SARSCoV2 infectiion per million in African countries
-#ggplot(Africa_Centriods, aes(y = reorder(region, Cases_Per_Million), x = Cases_Per_Million)) +
-# geom_bar(stat = "identity") +
-#labs(title = "SARS-CoV-2 reported cases per one million in African Countries", y = "Country", x = "Cases per a million persons", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_Million_bar.pdf")
-
-
-#Bar chart of SARSCoV2 infection per 100000
-#ggplot(Africa_Centriods, aes(y = reorder(region, Per_100000_Infected), x = Per_100000_Infected)) +
-# geom_bar(stat = "identity") +
-#labs(title = "SARS-CoV-2 reported cases per hundred thousand population in Africa", y = "Country", x = "Cases per 100,000 persons", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_100000_bar.pdf")
-
-
-
-##BAR CHART
-#ggplot(Africa_Centriods, aes(y = reorder(region, Per_100000_Infected), x = Per_100000_Infected)) +
-# geom_bar(stat = "identity") +
-#labs(title = "SARS-CoV-2 reported cases per hundred thousand population in Africa", y = "Country", x = "Cases per 100,000 persons", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_100000_bar.pdf")
-
-##GEOM POINT
-#ggplot(Africa_Map_details, aes(y = Popn, x = Per_100000_Infected)) + 
-# geom_point(size = 2, color = 'blue') + 
-#geom_text(label = Africa_Map_details$region) + theme_bw() +
-#labs(title = " SARS-CoV2 per hundred thousand population in African Countries", subtitle = "Plot of population against number of reported SARS-CoV-2 cases per hundred thousand population", y = "Population", x ="Persons infected per hundred thousand", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_100000_point.pdf")
-
-##MAP
-#ggplot(Africa_Map_details) + 
-# geom_polygon(aes(long, lat, group = group, fill = Cases_Per_Million), color = 'black') +
-#coord_map("bonne", parameters = 45)+
-#labs(title = "SARS-CoV2 per million of population in African countries", caption = "Source: https://www.worldometers.info/coronavirus") +
-#scale_fill_continuous(name = "Cases_Per_Million", low = "white", high = "darkblue",
-#                     limits = c(0, 13000), breaks = c(0, 1500, 2500, 5000, 7500, 10000, 15000)) +
-#theme_void()
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Cases_Per_Million_Map.pdf")
-
-
-
-#SARSCoV2 Infection per 100,000 in African Countries
-#ggplot(Africa_Map_details, aes(y = Popn, x = Per_100000_Infected)) + 
-# geom_point(size = 2, color = 'blue') + 
-#geom_text(label = Africa_Map_details$region) + theme_bw() +
-#labs(title = " SARS-CoV2 per hundred thousand population in African Countries", subtitle = "Plot of population against number of reported SARS-CoV-2 cases per hundred thousand population", y = "Population", x ="Persons infected per hundred thousand", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_100000_point.pdf")
-
-
-
-#Bar chart of SARSCoV2 infection per 100000
-#ggplot(Africa_Centriods, aes(y = reorder(region, Per_100000_Infected), x = Per_100000_Infected)) +
-# geom_bar(stat = "identity") +
-#labs(title = "SARS-CoV-2 reported cases per hundred thousand population in Africa", y = "Country", x = "Cases per 100,000 persons", caption = "Source: https://www.worldometers.info/coronavirus")
-#ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Africa_Update/Plots_Tables/Africa_Infected_Per_100000_bar.pdf")
