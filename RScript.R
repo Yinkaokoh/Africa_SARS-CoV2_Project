@@ -55,8 +55,8 @@ africa_map <- map_data("world", region = africa_countries$region)
 #Get a Centroid for African countries
 african_countries_centriods <- africa_map %>% group_by(region) %>% summarise(long = mean(range(long)), lat = mean(range(lat)))
 
-#Select 'Confirmed Cases', 'Active' and 'Recovered' and 'Deaths' data from the world cases
-card <- cases_with_popn %>% select(region, Confirmed, Deaths, Recovered, Active, Population...3, Popn, infected_per_100000)
+#Select 'Confirmed Cases', 'Active' and 'Recovered' and 'Deaths' data from the world cases, add "Recovery per 100 infected cases" and "Death per 100 infected cases"
+card <- cases_with_popn %>% select(region, Confirmed, Deaths, Recovered, Active, Population...3, Popn, infected_per_100000) %>% mutate(Recovery_per_100 = (Recovered/Confirmed)*100) %>% mutate (Deaths_per_100 = (Deaths/Confirmed)*100)
 
 africa_centriods <- left_join(african_countries_centriods, card, by = 'region')
 
@@ -67,8 +67,8 @@ africa_map_details <- left_join(africa_map, card, "region")
 
 
 ###### CASES IN DIFFERENT AFRICAN COUNTRIES ##########
-#MAP
 #Africa Map showing SARS-CoV2 Cases reported in various countries as at 4th September, 2020
+#MAP
 ggplot(africa_map_details) +
   geom_polygon(aes(long, lat, group = group, fill = Confirmed), color = 'black') +
   coord_map("bonne", parameters = 45) +
@@ -95,8 +95,8 @@ ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_
 
 
 ######## CASES PER 100,000 POPULATION IN AFRICAN COUNTRIES
-#MAP
 #Africa Map showing number of persons infected with SARS-CoV2 per 100,000 population in various African countries as at 4th September, 2020
+#MAP
 ggplot(africa_map_details) +
   geom_polygon(aes(long, lat, group = group, fill = infected_per_100000), color = 'black') +
   coord_map("bonne", parameters = 45) +
@@ -120,6 +120,64 @@ ggplot(africa_centriods, aes(y = reorder(region, infected_per_100000), x = infec
   geom_bar(stat = "identity", fill = 'orange') +
   labs(title = "SARS-CoV-2 cases per 100,000 population in African Countries", y = "Country", x = "Number of cases", caption = "Source: https://www.worldometers.info/coronavirus")
 ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_Cases_per_100000_bar.pdf")
+
+
+########### Deaths per 100 infected in different African Countries
+#MAP
+ggplot(africa_map_details) +
+  geom_polygon(aes(long, lat, group = group, fill = Deaths_per_100), color = 'black') +
+  coord_map("bonne", parameters = 45) +
+  labs(title = "Deaths per 100 confirmed SARS-CoV2 Cases in Africa", caption = "Source: https://www.worldometers.info/coronavirus") +
+  scale_fill_continuous(name = "Deaths", low = "white", high = "red", 
+                        limits = c(0, 10), breaks = c(0, 2, 4, 6, 8)) +
+  theme_void()
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/SARS-CoV2_Deaths_per_100_Map.pdf")   
+
+
+#POINT CHART
+ggplot(africa_centriods, aes(y = Popn, x = Deaths_per_100)) + 
+  geom_point(size = 2, color = 'red') + 
+  geom_text(label = africa_centriods$region) + theme_bw() +
+  labs(title = "Deaths per 100 reported SARS-CoV2 cases in Africa",  y = "Population (x million)", x ="Number of deaths", caption = "Source: https://www.worldometers.info/coronavirus")
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_death_per_100_point.pdf")
+
+
+#BAR CHART
+ggplot(africa_centriods, aes(y = reorder(region, Deaths_per_100), x = Deaths_per_100)) +
+  geom_bar(stat = "identity", fill = 'steelblue') +
+  labs(title = "Deaths per 100 SARS-CoV-2 cases in African Countries", y = "Country", x = "Deaths", caption = "Source: https://www.worldometers.info/coronavirus")
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_Deaths_per_100_bar.pdf")
+
+
+
+########### Recovery per 100 infected in different African Countries
+#MAP
+ggplot(africa_map_details) +
+  geom_polygon(aes(long, lat, group = group, fill = Recovery_per_100), color = 'black') +
+  coord_map("bonne", parameters = 45) +
+  labs(title = "Recovery per 100 SARS-CoV2 Cases in Africa", caption = "Source: https://www.worldometers.info/coronavirus") +
+  scale_fill_continuous(name = "Recovery cases", low = "white", high = "green", 
+                        limits = c(0, 125), breaks = c(0, 25, 50, 75, 100, 125)) +
+  theme_void()
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_Recovery_per_100_Map.pdf")   
+
+
+#POINT CHART
+ggplot(africa_centriods, aes(y = Popn, x = Recovery_per_100)) + 
+  geom_point(size = 2, color = 'green') + 
+  geom_text(label = africa_centriods$region) + theme_bw() +
+  labs(title = "Recovery per 100 SARS-CoV2 cases in Africa",  y = "Population (x million)", x ="Recovery", caption = "Source: https://www.worldometers.info/coronavirus")
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_Recovery_100_point.pdf")
+
+
+#BAR CHART
+ggplot(africa_centriods, aes(y = reorder(region, Recovery_per_100), x = Recovery_per_100)) +
+  geom_bar(stat = "identity", fill = 'steelblue') +
+  labs(title = "Recovery per 100 SARS-CoV2 cases in African Countries", y = "Country", x = "Recovery", caption = "Source: https://www.worldometers.info/coronavirus")
+ggsave(file = "C:/Users/YinkaOkoh/Desktop/Bioinformatics_Data/SARS-CoV2_Project_2021/SARS-CoV2_Project_2021/outputs/Africa_Recovery_per_100_bar.pdf")
+
+
+
 
 
 ####### script for lineages #########
